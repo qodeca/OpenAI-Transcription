@@ -25,6 +25,7 @@ tmp/
 temp/
 *.tmp
 *.temp
+nieistniejacy_folder/
 
 # Audio chunks and temporary media files
 audio-chunks-*
