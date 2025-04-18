@@ -34,3 +34,7 @@ audio-chunks-*
 .vscode/
 *.swp
 *.swo
+
+# Test media files and transcriptions
+test-media/
+transcriptions/

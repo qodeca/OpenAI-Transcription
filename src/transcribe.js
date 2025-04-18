@@ -2,14 +2,14 @@ const fs = require('fs-extra');
 const { OpenAI } = require('openai');
 const config = require('./config');
 const path = require('path');
-const { splitAudioFile, cleanupFiles } = require('./audioSplitter');
+const { splitMediaFile, cleanupFiles } = require('./mediaSplitter');
 
 // Import ora with dynamic import
 let spinner;
 
 /**
- * Transcribe an audio file with OpenAI's API
- * @param {string} filePath - Path to the audio file
+ * Transcribe an audio or video file with OpenAI's API
+ * @param {string} filePath - Path to the audio or video file
  * @param {string} outputPath - Path where the transcription will be saved
  * @returns {Promise<string>} - Transcription text
  */
@@ -20,24 +20,27 @@ async function transcribeAudio(filePath, outputPath) {
     
     // Import ora dynamically
     const { default: ora } = await import('ora');
-    spinner = ora('Preparing audio file for transcription...').start();
+    spinner = ora('Preparing media file for transcription...').start();
     
     try {
-        // Get file duration using ffmpeg
-        const ffmpeg = require('fluent-ffmpeg');
-        
         // Maximum duration allowed by the model in seconds (25 minutes)
         const MAX_DURATION_SECONDS = 1500;
         // Use a slightly lower value for our chunks to be safe
         const CHUNK_DURATION_SECONDS = 1400;
         
-        let chunkFiles = [];
+        let allFilesToCleanup = [];
         let transcriptionParts = [];
         
-        // Split the file into chunks based on duration
-        spinner.text = `Analyzing audio file duration...`;
-        chunkFiles = await splitAudioFile(filePath, CHUNK_DURATION_SECONDS);
-        spinner.succeed(`Split audio into ${chunkFiles.length} chunks for processing`);
+        // Split the file into chunks based on duration, handling both audio and video
+        spinner.text = `Analyzing media file duration...`;
+        const { chunkFiles, filesToCleanup } = await splitMediaFile(filePath, CHUNK_DURATION_SECONDS);
+        
+        // Add any temp files from media processing to the cleanup list
+        if (filesToCleanup && filesToCleanup.length) {
+            allFilesToCleanup = [...allFilesToCleanup, ...filesToCleanup];
+        }
+        
+        spinner.succeed(`Split media into ${chunkFiles.length} chunks for processing`);
         
         // Process each chunk
         for (let i = 0; i < chunkFiles.length; i++) {
@@ -58,6 +61,9 @@ async function transcribeAudio(filePath, outputPath) {
             }
         }
         
+        // Add chunk files to cleanup list
+        allFilesToCleanup = [...allFilesToCleanup, ...chunkFiles];
+        
         // Save combined transcription to the specified output path
         const transcription = transcriptionParts.join('\n\n');
         
@@ -68,8 +74,8 @@ async function transcribeAudio(filePath, outputPath) {
         spinner = ora('Finalizing transcription...').start();
         spinner.succeed(`Full transcription saved to ${outputPath}`);
         
-        // Clean up temporary files
-        await cleanupFiles(chunkFiles);
+        // Clean up all temporary files
+        await cleanupFiles(allFilesToCleanup);
         
         return transcription;
     } catch (error) {
@@ -86,7 +92,7 @@ async function transcribeAudio(filePath, outputPath) {
         
         // Suggestion for next steps
         console.error('\nPossible solutions:');
-        console.error('1. Ensure the audio file is in a supported format (mp3, mp4, mpeg, mpga, m4a, wav, or webm)');
+        console.error('1. Ensure the file is in a supported format (audio: mp3, wav, m4a, mpga, mp4, webm or video: mp4, mov, avi, mkv, webm, flv, wmv)');
         console.error('2. Check if the file is not corrupted by playing it in a media player');
         console.error('3. Verify that your OpenAI API key has access to the GPT-4o-transcribe model');
         

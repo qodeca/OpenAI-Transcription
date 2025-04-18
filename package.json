@@ -1,7 +1,7 @@
 {
-  "name": "speech-to-text-app",
+  "name": "openai-transcription",
   "version": "1.0.0",
-  "description": "A simple application to transcribe audio files using the GPT-4o-transcribe model.",
+  "description": "A command-line tool to transcribe audio and video files using the OpenAI GPT-4o-transcribe model.",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js"
