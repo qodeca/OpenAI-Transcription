@@ -4,8 +4,26 @@ const config = require('./config');
 const path = require('path');
 const { splitMediaFile, cleanupFiles } = require('./mediaSplitter');
 
-// Import ora with dynamic import
+// Import ora with dynamic import or use mock in test environment
 let spinner;
+let ora;
+
+// Initialize ora based on environment
+async function initializeOra() {
+    if (process.env.NODE_ENV === 'test') {
+        // In test environment, use a simple mock
+        ora = () => ({
+            start: () => ({ succeed: () => {}, fail: () => {}, text: '' }),
+            succeed: () => {},
+            fail: () => {},
+            text: ''
+        });
+    } else {
+        // In production, use dynamic import
+        const oraModule = await import('ora');
+        ora = oraModule.default;
+    }
+}
 
 /**
  * Transcribe an audio or video file with OpenAI's API
@@ -18,8 +36,11 @@ async function transcribeAudio(filePath, outputPath) {
         apiKey: config.OPENAI_API_KEY
     });
     
-    // Import ora dynamically
-    const { default: ora } = await import('ora');
+    // Initialize ora if not already done
+    if (!ora) {
+        await initializeOra();
+    }
+    
     spinner = ora('Preparing media file for transcription...').start();
     
     try {

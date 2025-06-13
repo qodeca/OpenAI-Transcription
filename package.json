@@ -4,7 +4,12 @@
   "description": "A command-line tool to transcribe audio and video files using the OpenAI GPT-4o-transcribe model.",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "test": "jest",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "commander": "^13.1.0",
@@ -17,5 +22,9 @@
     "ora": "^8.2.0"
   },
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "jest": "^30.0.0"
+  }
 }

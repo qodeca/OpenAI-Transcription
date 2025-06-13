@@ -44,7 +44,7 @@ node src/index.js -i audio.mp3 -o transcript.txt
 
 ## Features
 
-- 🎵 **Multi-Format Support**: Transcribe MP3, WAV, M4A, MPGA, MPEG, MP4, WebM audio files
+- 🎵 **Multi-Format Support**: Transcribe MP3, WAV, M4A, MPGA, MPEG audio files
 - 🎬 **Video Processing**: Extract and transcribe audio from MP4, MOV, AVI, MKV, WebM, FLV, WMV
 - 🔪 **Smart Chunking**: Automatically splits large files into 25-minute segments
 - 🚀 **Efficient Processing**: Handles files of any size without memory issues
@@ -132,8 +132,6 @@ done
 - M4A (.m4a)
 - MPGA (.mpga)
 - MPEG (.mpeg)
-- MP4 (.mp4)
-- WebM (.webm)
 
 ### Video Formats
 - MP4 (.mp4)
@@ -232,14 +230,38 @@ Check `notes/backlog.md` for planned features:
 
 ### Testing
 
-Comprehensive testing plans available in `notes/future_tests.md`:
+The project now includes a comprehensive automated test suite using Jest:
 
 ```bash
-# Run manual tests with sample files
-node src/index.js -i test-media/audio-mp3.mp3 -o test-output.txt
-
-# Automated tests (coming soon)
+# Run all tests
 npm test
+
+# Run only unit tests
+npm run test:unit
+
+# Run only integration tests
+npm run test:integration
+
+# Run tests in watch mode (for development)
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+```
+
+**Test Structure:**
+- `tests/unit/` - Unit tests for individual modules
+  - `config.test.js` - Tests for configuration module
+  - `mediaSplitter.test.js` - Tests for audio/video processing
+  - `transcribe.test.js` - Tests for transcription logic
+- `tests/integration/` - Integration tests
+  - `cli.test.js` - Tests for command-line interface
+- `tests/__mocks__/` - Mock implementations for external dependencies
+
+**Manual Testing:**
+```bash
+# Test with sample files
+node src/index.js -i test-media/audio-mp3.mp3 -o test-output.txt
 ```
 
 ## Troubleshooting

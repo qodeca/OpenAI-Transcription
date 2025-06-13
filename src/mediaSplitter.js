@@ -8,7 +8,7 @@ const os = require('os');
 ffmpeg.setFfmpegPath(ffmpegPath);
 
 // Audio file extensions
-const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.m4a', '.mpga', '.mpeg', '.mp4', '.webm'];
+const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.m4a', '.mpga', '.mpeg'];
 // Video file extensions
 const VIDEO_EXTENSIONS = ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.flv', '.wmv'];
 
