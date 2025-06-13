@@ -1,96 +1,127 @@
 # OpenAI-Transcription
 
-A command-line Node.js application that converts audio and video files into accurate text transcriptions using OpenAI's GPT-4o-transcribe model. The tool efficiently handles files of various formats and sizes by splitting them into manageable chunks for processing.
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)](https://nodejs.org)
+[![GitHub issues](https://img.shields.io/github/issues/qodeca/OpenAI-Transcription)](https://github.com/qodeca/OpenAI-Transcription/issues)
+[![GitHub stars](https://img.shields.io/github/stars/qodeca/OpenAI-Transcription)](https://github.com/qodeca/OpenAI-Transcription/stargazers)
+
+A powerful command-line tool that converts audio and video files into accurate text transcriptions using OpenAI's state-of-the-art GPT-4o-transcribe model. Handles files of any size with intelligent chunking and supports multiple formats.
+
+## Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/qodeca/OpenAI-Transcription.git
+cd OpenAI-Transcription
+
+# Install dependencies
+npm install
+
+# Set your OpenAI API key
+echo "OPENAI_API_KEY=your_api_key_here" > .env
+
+# Transcribe an audio file
+node src/index.js -i audio.mp3 -o transcript.txt
+```
 
 ## Table of Contents
 
 - [Features](#features)
-- [Requirements](#requirements)
+- [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Usage](#usage)
+  - [Basic Examples](#basic-examples)
   - [Command-Line Options](#command-line-options)
-  - [Examples](#examples)
 - [Supported File Formats](#supported-file-formats)
+- [Configuration](#configuration)
 - [How It Works](#how-it-works)
-- [Environment Variables](#environment-variables)
 - [Project Structure](#project-structure)
 - [Development](#development)
-  - [Adding New Features](#adding-new-features)
-  - [Testing](#testing)
-  - [Backlog](#backlog)
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
 - [License](#license)
+- [Acknowledgments](#acknowledgments)
 
 ## Features
 
-- Transcribes audio and video files using OpenAI's state-of-the-art GPT-4o-transcribe model
-- Supports a wide range of audio and video formats
-- Automatically extracts audio from video files
-- Handles files of any size through intelligent chunking
-- Provides real-time progress feedback with spinner animations
-- Implements automatic cleanup of temporary files
-- Creates output directories automatically if they don't exist
+- 🎵 **Multi-Format Support**: Transcribe MP3, WAV, M4A, MPGA, MPEG, MP4, WebM audio files
+- 🎬 **Video Processing**: Extract and transcribe audio from MP4, MOV, AVI, MKV, WebM, FLV, WMV
+- 🔪 **Smart Chunking**: Automatically splits large files into 25-minute segments
+- 🚀 **Efficient Processing**: Handles files of any size without memory issues
+- 📊 **Progress Tracking**: Real-time feedback with spinner animations
+- 🧹 **Auto Cleanup**: Temporary files removed after processing
+- 📁 **Smart Output**: Creates output directories automatically
 
-## Requirements
+## Prerequisites
 
-- Node.js (v16.0.0 or higher)
-- An OpenAI API key with access to the GPT-4o-transcribe model
-- FFmpeg (automatically installed as a dependency)
+- **Node.js** v16.0.0 or higher ([Download](https://nodejs.org/))
+- **OpenAI API Key** with access to GPT-4o-transcribe model ([Get API Key](https://platform.openai.com/api-keys))
+- **FFmpeg** (automatically installed as a dependency)
 
 ## Installation
 
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd OpenAI-Transcription
-   ```
+### From Source (Recommended)
 
-2. Install the dependencies:
-   ```bash
-   npm install
-   ```
+```bash
+# Clone the repository
+git clone https://github.com/qodeca/OpenAI-Transcription.git
+cd OpenAI-Transcription
 
-3. Create a `.env` file in the root directory with your OpenAI API key:
-   ```bash
-   echo "OPENAI_API_KEY=your_api_key_here" > .env
-   ```
+# Install dependencies
+npm install
+
+# Set up your OpenAI API key
+echo "OPENAI_API_KEY=your_api_key_here" > .env
+```
+
+### Global Installation (Coming Soon)
+
+```bash
+# Install globally via npm
+npm install -g openai-transcription
+
+# Set API key as environment variable
+export OPENAI_API_KEY=your_api_key_here
+```
 
 ## Usage
 
-The application runs from the command line with required input and output parameters.
+### Basic Examples
+
+```bash
+# Transcribe an audio file
+node src/index.js -i podcast.mp3 -o transcript.txt
+
+# Transcribe a video file (audio extracted automatically)
+node src/index.js -i lecture.mp4 -o lecture-notes.txt
+
+# Use with sample files
+node src/index.js -i test-media/audio-mp3.mp3 -o transcriptions/output.txt
+```
 
 ### Command-Line Options
 
 ```bash
-node src/index.js -i <input-file-path> -o <output-file-path>
+node src/index.js [options]
 ```
 
-Required options:
-- `-i, --input <path>`: Path to the input audio or video file
-- `-o, --output <path>`: Path where the transcription will be saved
+| Option | Alias | Description | Required |
+|--------|-------|-------------|----------|
+| `--input` | `-i` | Path to input audio/video file | ✅ |
+| `--output` | `-o` | Path for output transcription | ✅ |
+| `--help` | `-h` | Display help information | ❌ |
+| `--version` | | Show version number | ❌ |
 
-Additional options:
-- `--version`: Show the version number
-- `-h, --help`: Display help information
+### Advanced Usage
 
-### Examples
-
-Transcribe an MP3 audio file:
 ```bash
-node src/index.js -i test-media/audio-mp3.mp3 -o transcriptions/output.txt
-```
+# Using absolute paths
+node src/index.js -i /Users/john/recordings/meeting.mp3 -o /Users/john/transcripts/meeting.txt
 
-Transcribe a video file:
-```bash
-node src/index.js -i test-media/movie-mp4.mp4 -o transcriptions/video-transcription.txt
-```
-
-Using absolute paths:
-```bash
-node src/index.js -i /Users/username/Music/interview.mp3 -o /Users/username/Documents/transcription.txt
+# Process multiple files (using shell)
+for file in *.mp3; do
+  node src/index.js -i "$file" -o "${file%.mp3}.txt"
+done
 ```
 
 ## Supported File Formats
@@ -113,6 +144,29 @@ node src/index.js -i /Users/username/Music/interview.mp3 -o /Users/username/Docu
 - FLV (.flv)
 - WMV (.wmv)
 
+## Configuration
+
+### Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+OPENAI_API_KEY=your_api_key_here
+```
+
+Or set as system environment variable:
+
+```bash
+# macOS/Linux
+export OPENAI_API_KEY=your_api_key_here
+
+# Windows (Command Prompt)
+set OPENAI_API_KEY=your_api_key_here
+
+# Windows (PowerShell)
+$env:OPENAI_API_KEY="your_api_key_here"
+```
+
 ## How It Works
 
 1. **File Validation**: The application first checks if the input file exists and is in a supported format.
@@ -127,105 +181,174 @@ node src/index.js -i /Users/username/Music/interview.mp3 -o /Users/username/Docu
 
 6. **Cleanup**: All temporary files created during processing are automatically removed.
 
-## Environment Variables
-
-The application requires the following environment variable:
-
-- `OPENAI_API_KEY`: Your OpenAI API key with access to the GPT-4o-transcribe model
-
-You can set this in a `.env` file or in your system environment.
 
 ## Project Structure
 
 ```
-.
+OpenAI-Transcription/
 ├── src/                      # Source code
-│   ├── config.js             # Configuration and environment variables
-│   ├── index.js              # Main application entry point
-│   ├── mediaSplitter.js      # Audio/video processing utilities
-│   └── transcribe.js         # OpenAI API integration for transcription
-├── test-media/               # Sample media files for testing
-│   ├── audio-mp3.mp3
-│   └── movie-mp4.mp4
-├── transcriptions/           # Default directory for output files
-├── notes/                    # Project documentation and plans
-│   ├── backlog.md            # Project backlog with upcoming tasks
-│   └── future_tests.md       # Plans for future testing
-├── .env                      # Environment variables (create this file)
-├── package.json              # Project dependencies and scripts
-└── README.md                 # Project documentation
+│   ├── config.js             # Configuration management
+│   ├── index.js              # CLI entry point
+│   ├── mediaSplitter.js      # Audio/video processing
+│   └── transcribe.js         # OpenAI API integration
+├── test-media/               # Sample files for testing
+├── transcriptions/           # Default output directory
+├── notes/                    # Development documentation
+│   ├── backlog.md            # Feature roadmap
+│   └── future_tests.md       # Testing plans
+├── .env                      # API configuration (create this)
+├── package.json              # Dependencies
+├── LICENSE                   # MIT license
+└── README.md                 # This file
 ```
 
 ## Development
 
-### Adding New Features
+### Running Locally
 
-When adding new features:
+```bash
+# Install dependencies
+npm install
 
-1. First check the `notes/backlog.md` file to see if your feature is already planned
-2. Create a new branch for your feature
-3. Write tests before implementing the feature
-4. Follow the existing code style and patterns
-5. Update documentation to reflect your changes
-6. Submit a pull request with a clear description
+# Run with sample files
+node src/index.js -i test-media/audio-mp3.mp3 -o test-output.txt
+
+# Run with npm script
+npm start -- -i test-media/audio-mp3.mp3 -o test-output.txt
+```
+
+### Project Roadmap
+
+Check `notes/backlog.md` for planned features:
+
+- ✅ Basic transcription functionality
+- ✅ Video file support
+- ✅ Large file chunking
+- 🚧 Automated testing suite
+- 📋 Batch processing
+- 📋 Multiple output formats (SRT, VTT)
+- 📋 Progress bar visualization
+- 📋 Language detection
 
 ### Testing
 
-The project includes a comprehensive testing plan:
+Comprehensive testing plans available in `notes/future_tests.md`:
 
-1. Basic functionality tests (file formats, arguments)
-2. Edge case tests (file sizes, corrupt files, etc.)
-3. API connection tests (error handling, network issues)
+```bash
+# Run manual tests with sample files
+node src/index.js -i test-media/audio-mp3.mp3 -o test-output.txt
 
-To implement automated tests, check the `notes/future_tests.md` file for guidance.
-
-### Backlog
-
-The project backlog is maintained in `notes/backlog.md`. It contains:
-
-- A list of planned features and improvements
-- Prioritized tasks with detailed descriptions
-- Testing scenarios and validation criteria
-
-If you want to contribute, picking a task from the backlog is a great place to start.
+# Automated tests (coming soon)
+npm test
+```
 
 ## Troubleshooting
 
 ### Common Issues
 
-**Error: File not found**
-- Make sure the file path is correct
-- Try using an absolute path instead of a relative path
+<details>
+<summary><strong>Error: ENOENT - File not found</strong></summary>
 
-**Error: Unsupported file format**
-- Check if your file format is listed in the Supported File Formats section
-- Try converting your file to a supported format using a tool like FFmpeg
+```bash
+# Check file exists
+ls -la path/to/your/file.mp3
 
-**API Key Issues**
-- Verify that your OpenAI API key is correct
-- Ensure your account has access to the GPT-4o-transcribe model
-- Check your API usage limits and billing status
+# Use absolute path
+node src/index.js -i $(pwd)/file.mp3 -o $(pwd)/output.txt
+```
+</details>
 
-**Memory Issues with Large Files**
-- The application should handle large files through chunking, but if you encounter memory issues, try processing a smaller portion of the file first
+<details>
+<summary><strong>Error: Unsupported file format</strong></summary>
+
+- Verify format is supported (see [Supported File Formats](#supported-file-formats))
+- Convert to supported format:
+  ```bash
+  # Convert any audio to MP3
+  ffmpeg -i input.ogg -acodec mp3 output.mp3
+  ```
+</details>
+
+<details>
+<summary><strong>Error: Invalid API Key</strong></summary>
+
+```bash
+# Check your .env file
+cat .env
+
+# Verify API key works
+curl https://api.openai.com/v1/models \
+  -H "Authorization: Bearer $OPENAI_API_KEY"
+```
+</details>
+
+<details>
+<summary><strong>FFmpeg not found</strong></summary>
+
+```bash
+# macOS
+brew install ffmpeg
+
+# Ubuntu/Debian
+sudo apt-get update && sudo apt-get install ffmpeg
+
+# Windows - Download from https://ffmpeg.org/download.html
+```
+</details>
+
+### Getting Help
+
+- 📖 Check the [documentation](https://github.com/qodeca/OpenAI-Transcription/wiki)
+- 🐛 [Report issues](https://github.com/qodeca/OpenAI-Transcription/issues)
+- 💬 [Start a discussion](https://github.com/qodeca/OpenAI-Transcription/discussions)
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request or create an Issue to report bugs or request features.
+We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md) for details.
 
-Steps to contribute:
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### Quick Start for Contributors
 
-Please ensure your code follows the existing style and includes appropriate tests and documentation.
+```bash
+# Fork and clone
+git clone https://github.com/YOUR_USERNAME/OpenAI-Transcription.git
+cd OpenAI-Transcription
+
+# Create feature branch
+git checkout -b feature/your-feature-name
+
+# Install dependencies
+npm install
+
+# Make changes and test
+node src/index.js -i test-media/audio-mp3.mp3 -o test.txt
+
+# Commit and push
+git add .
+git commit -m "feat: add your feature"
+git push origin feature/your-feature-name
+```
+
+### Contribution Guidelines
+
+- 🔍 Check existing issues and PRs first
+- 📝 Follow existing code style
+- ✅ Test your changes thoroughly
+- 📚 Update documentation if needed
+- 🎯 One feature/fix per PR
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- 🤖 Built with [OpenAI's GPT-4o-transcribe model](https://platform.openai.com/docs/models)
+- 🎬 Audio processing powered by [FFmpeg](https://ffmpeg.org/)
+- 🚀 CLI interface built with [Commander.js](https://github.com/tj/commander.js/)
+- 💫 Loading animations by [ora](https://github.com/sindresorhus/ora)
 
 ---
 
-Made with ❤️ using OpenAI's GPT-4o-transcribe model
+<p align="center">
+  Made with ❤️ by the OpenAI-Transcription community
+</p>
