@@ -32,8 +32,7 @@ The project uses Jest for automated testing with comprehensive coverage:
 - Integration tests for CLI functionality
 - Current coverage: ~97% across all metrics
 - Test files located in `tests/` directory
-- See `notes/backlog.md` for additional testing tasks (Tasks 1-13)
-- See `notes/future_tests.md` for future testing proposals
+- All testing tasks now tracked as GitHub issues (#2-#14)
 
 ## Architecture Overview
 
@@ -53,6 +52,7 @@ The project uses Jest for automated testing with comprehensive coverage:
    - Interfaces with OpenAI's GPT-4o-transcribe model
    - Processes audio chunks sequentially
    - Combines chunk transcriptions into final output
+   - Special handling for test environment (NODE_ENV=test)
 
 4. **Configuration** (`src/config.js`)
    - Manages environment variables
@@ -60,8 +60,10 @@ The project uses Jest for automated testing with comprehensive coverage:
 
 ### Key Technical Details
 
-- **Chunk Duration**: 25 minutes (1500 seconds) per chunk
-- **Supported Formats**: MP3, WAV, M4A, MPGA, MPEG, MP4, WebM (audio); MP4, MOV, AVI, MKV, WebM, FLV, WMV (video)
+- **Chunk Duration**: ~23 minutes (1400 seconds) per chunk (safely under OpenAI's 25-minute limit)
+- **Supported Formats**: 
+  - Audio: MP3, WAV, M4A, MPGA, MPEG
+  - Video: MP4, MOV, AVI, MKV, WebM, FLV, WMV
 - **Temporary Files**: Created in system temp directory, cleaned up after processing
 - **Error Handling**: Comprehensive error messages with suggestions for resolution
 
@@ -70,7 +72,7 @@ The project uses Jest for automated testing with comprehensive coverage:
 1. **API Key**: Required environment variable `OPENAI_API_KEY`
 2. **File Size Handling**: Large files are automatically chunked
 3. **Memory Management**: Processes files in chunks to avoid memory issues
-4. **Network Resilience**: Basic error handling for API failures (see Task 17 in backlog for improvements)
+4. **Network Resilience**: Basic error handling for API failures (see GitHub issue #17 for planned improvements)
 
 ## Development Best Practices
 
@@ -91,11 +93,41 @@ Before committing any changes, ensure:
 - Reference issue numbers when applicable
 - Keep commits focused and atomic
 
-## Development Priorities
+## Development Workflow
 
-The `notes/backlog.md` contains 29 prioritized tasks. Key areas include:
-- Comprehensive testing implementation (Tasks 1-13) ✅ COMPLETED
-- Error handling improvements (Tasks 17, 28)
-- Performance optimization (Tasks 21-23)
-- Code cleanup (Tasks 24-29)
-- Feature additions (batch processing, UI, progress reporting)
+### GitHub Integration
+- GitHub CLI (`gh`) is configured for creating PRs and issues
+- All development happens in feature branches
+- Pull requests require passing tests before merge
+- Issues track all development tasks and bugs
+
+### Current Project Status
+- ✅ Comprehensive test suite implemented (~97% coverage)
+- ✅ All backlog tasks migrated to GitHub issues
+- 🚧 Active development on issues #2-#14 (end-to-end testing)
+
+### Issue Tracking
+All development tasks are now tracked as GitHub issues:
+- Issues #2-#8: Core testing scenarios from original backlog
+- Issues #9-#13: Additional edge cases and quality testing
+- Issue #14: End-to-end testing framework
+- Issue #17: Network resilience improvements (referenced above)
+
+### Branch Strategy
+- `main`: Production-ready code
+- `feature/*`: New features and enhancements
+- All changes go through pull requests
+
+## Important Notes
+
+### Testing Philosophy
+- Unit tests use mocks for external dependencies (FFmpeg, OpenAI API)
+- Integration tests verify CLI behavior
+- End-to-end tests (planned) will use real media files and services
+- All tests must pass before commits
+
+### Code Quality Standards
+- Maintain >95% test coverage
+- Follow existing code patterns and conventions
+- No console.log statements in production code
+- Clear error messages with actionable solutions
