@@ -13,10 +13,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Install dependencies: `npm install`
 
 ### Testing
-- No automated test framework is currently configured
-- Manual testing with files in `test-media/` directory
-- See `notes/backlog.md` for comprehensive testing plan (Tasks 1-13)
-- See `notes/future_tests.md` for additional testing proposals
+
+**IMPORTANT: Always run tests before committing changes!**
+
+```bash
+# Run all tests before each commit
+npm test
+
+# Run specific test suites
+npm run test:unit        # Unit tests only
+npm run test:integration # Integration tests only
+npm run test:coverage    # Tests with coverage report
+npm run test:watch       # Watch mode for development
+```
+
+The project uses Jest for automated testing with comprehensive coverage:
+- Unit tests for all core modules (config, mediaSplitter, transcribe)
+- Integration tests for CLI functionality
+- Current coverage: ~97% across all metrics
+- Test files located in `tests/` directory
+- See `notes/backlog.md` for additional testing tasks (Tasks 1-13)
+- See `notes/future_tests.md` for future testing proposals
 
 ## Architecture Overview
 
@@ -55,10 +72,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 3. **Memory Management**: Processes files in chunks to avoid memory issues
 4. **Network Resilience**: Basic error handling for API failures (see Task 17 in backlog for improvements)
 
+## Development Best Practices
+
+### Pre-Commit Checklist
+
+Before committing any changes, ensure:
+
+1. **Run all tests**: `npm test` - All tests must pass
+2. **Check test coverage**: `npm run test:coverage` - Maintain >95% coverage
+3. **Verify no console errors**: Test the application manually with sample files
+4. **Update tests**: Add/update tests for any new functionality
+5. **Update documentation**: Keep README.md and code comments current
+
+### Git Commit Guidelines
+
+- Use conventional commit format: `feat:`, `fix:`, `docs:`, `test:`, `refactor:`
+- Write clear, descriptive commit messages
+- Reference issue numbers when applicable
+- Keep commits focused and atomic
+
 ## Development Priorities
 
 The `notes/backlog.md` contains 29 prioritized tasks. Key areas include:
-- Comprehensive testing implementation (Tasks 1-13)
+- Comprehensive testing implementation (Tasks 1-13) ✅ COMPLETED
 - Error handling improvements (Tasks 17, 28)
 - Performance optimization (Tasks 21-23)
 - Code cleanup (Tasks 24-29)
