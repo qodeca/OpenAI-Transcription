@@ -46,8 +46,8 @@ async function transcribeAudio(filePath, outputPath) {
     try {
         // Maximum duration allowed by the model in seconds (25 minutes)
         const MAX_DURATION_SECONDS = 1500;
-        // Use a slightly lower value for our chunks to be safe
-        const CHUNK_DURATION_SECONDS = 1400;
+        // Use a slightly lower value for our chunks to be safe (with 10s buffer for FFmpeg precision)
+        const CHUNK_DURATION_SECONDS = 1390;
         
         let allFilesToCleanup = [];
         let transcriptionParts = [];
