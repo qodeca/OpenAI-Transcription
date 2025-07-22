@@ -182,5 +182,6 @@ module.exports = {
     splitMediaFile,
     getMediaType,
     extractAudioFromVideo,
-    cleanupFiles
+    cleanupFiles,
+    getMediaDuration
 };

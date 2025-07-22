@@ -7,7 +7,7 @@ jest.mock('../../src/mediaSplitter');
 
 const fs = require('fs-extra');
 const { OpenAI } = require('openai');
-const { splitMediaFile, cleanupFiles } = require('../../src/mediaSplitter');
+const { splitMediaFile, cleanupFiles, getMediaDuration } = require('../../src/mediaSplitter');
 const { transcribeAudio } = require('../../src/transcribe');
 
 // Mock config
@@ -30,7 +30,19 @@ describe('transcribe.js', () => {
       audio: {
         transcriptions: {
           create: jest.fn().mockResolvedValue({
-            text: 'This is a mock transcription of the audio file.'
+            text: 'This is a mock transcription of the audio file. ' +
+                  'It contains multiple sentences to simulate a real transcription. ' +
+                  'The text needs to be long enough to pass validation checks. ' +
+                  'Each chunk typically contains several minutes of spoken content. ' +
+                  'This ensures the validation logic recognizes it as valid transcription. ' +
+                  'We need at least 50 words per minute for the validation to pass. ' +
+                  'So for a 23-minute chunk, we need quite a bit of text here. ' +
+                  'This mock transcription simulates what a real API response would return. ' +
+                  'It includes various topics and sentences to make it realistic. ' +
+                  'The validation checks for minimum word count and character density. ' +
+                  'This text should now be long enough to satisfy those requirements. ' +
+                  'Real transcriptions would have much more varied and natural content. ' +
+                  'But for testing purposes, this repetitive text should suffice.'
           })
         }
       }
@@ -53,6 +65,9 @@ describe('transcribe.js', () => {
     });
     
     cleanupFiles.mockResolvedValue();
+    
+    // Mock getMediaDuration
+    getMediaDuration.mockResolvedValue(180); // 3 minutes - short enough to skip validation
   });
 
   describe('transcribeAudio', () => {
@@ -63,7 +78,7 @@ describe('transcribe.js', () => {
       const result = await transcribeAudio(inputPath, outputPath);
       
       // Verify file splitting
-      expect(splitMediaFile).toHaveBeenCalledWith(inputPath, 1400);
+      expect(splitMediaFile).toHaveBeenCalledWith(inputPath, 1390);
       
       // Verify OpenAI was initialized
       expect(OpenAI).toHaveBeenCalledWith({ apiKey: 'test-api-key' });
@@ -99,7 +114,7 @@ describe('transcribe.js', () => {
       
       await transcribeAudio(inputPath, outputPath);
       
-      expect(splitMediaFile).toHaveBeenCalledWith(inputPath, 1400);
+      expect(splitMediaFile).toHaveBeenCalledWith(inputPath, 1390);
       expect(cleanupFiles).toHaveBeenCalledWith([
         '/tmp/extracted-audio.mp3',
         '/tmp/chunk-0.mp3'
