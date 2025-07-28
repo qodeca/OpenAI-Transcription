@@ -8,6 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 #### Transcription
 - Run: `node src/index.js transcribe -i <input-file> -o <output-file>`
+- With debugging: `node src/index.js transcribe -i <input-file> -o <output-file> --save-chunks`
 - Or via npm: `npm start -- transcribe -i <input-file> -o <output-file>`
 
 #### Audio Extraction
@@ -48,9 +49,10 @@ The project uses Jest for automated testing with comprehensive coverage:
 ## Project Overview
 
 **OpenTTS** is a comprehensive command-line tool that provides:
-- **Transcription**: Convert audio/video files to text using OpenAI's GPT-4o-transcribe model
+- **Transcription**: Convert audio/video files to text using OpenAI's models (GPT-4o-transcribe and whisper-1)
 - **Audio Extraction**: Extract and convert audio from video files with quality control
 - **Format Support**: Handles multiple audio/video formats with intelligent chunking
+- **Truncation Recovery**: Automatic fallback to whisper-1 when GPT-4o-transcribe truncates
 
 ## Architecture Overview
 
@@ -69,9 +71,10 @@ The project uses Jest for automated testing with comprehensive coverage:
 
 3. **Media Processing** (`src/mediaSplitter.js`)
    - Extracts audio from video files using FFmpeg
-   - Splits audio into ~25-minute chunks (OpenAI's limit)
+   - Splits audio into 15-minute chunks with 15-second overlap
    - Converts between audio formats
    - Handles temporary file creation and cleanup
+   - Special processing for final chunks
 
 4. **Audio Extraction** (`src/audioExtractor.js`)
    - Core logic for audio extraction feature
@@ -80,18 +83,27 @@ The project uses Jest for automated testing with comprehensive coverage:
    - Progress feedback with ora spinner
 
 5. **Transcription** (`src/transcribe.js`)
-   - Interfaces with OpenAI's GPT-4o-transcribe model
-   - Processes audio chunks sequentially
-   - Combines chunk transcriptions into final output
-   - Special handling for test environment (NODE_ENV=test)
+   - Interfaces with OpenAI's transcription models
+   - Implements truncation detection and recovery
+   - Automatic model fallback (GPT-4o → whisper-1)
+   - Processes audio chunks with overlap
+   - Special handling for final chunks using whisper-1
 
 6. **Configuration** (`src/config.js`)
    - Manages environment variables
-   - Provides API configuration
+   - Provides API and model configuration
+   - Supports model selection and fallback settings
+
+7. **Constants** (`src/constants.js`) **[NEW]**
+   - Centralized configuration values
+   - Transcription parameters and thresholds
+   - Anti-truncation prompts
+   - Model definitions
 
 ### Key Technical Details
 
-- **Chunk Duration**: ~23 minutes (1400 seconds) per chunk (safely under OpenAI's 25-minute limit)
+- **Chunk Duration**: 15 minutes (900 seconds) per chunk - reduced from 23 minutes to prevent truncation
+- **Chunk Overlap**: 15 seconds between chunks to prevent content loss
 - **Supported Formats**: 
   - Audio Input/Output: MP3, WAV, M4A, MPGA, MPEG
   - Video Input: MP4, MOV, AVI, MKV, WebM, FLV, WMV
@@ -101,14 +113,16 @@ The project uses Jest for automated testing with comprehensive coverage:
   - Quality: 0-9 scale (0=best quality)
 - **Temporary Files**: Created in system temp directory, cleaned up after processing
 - **Error Handling**: Comprehensive error messages with suggestions for resolution
+- **Truncation Recovery**: Automatic detection and model fallback for complete transcriptions
 
 ### Important Considerations
 
 1. **API Key**: Required environment variable `OPENAI_API_KEY` (only for transcription)
-2. **File Size Handling**: Large files are automatically chunked
+2. **File Size Handling**: Large files are automatically chunked with overlap
 3. **Memory Management**: Processes files in chunks to avoid memory issues
-4. **Network Resilience**: Basic error handling for API failures (see GitHub issue #17 for planned improvements)
+4. **Network Resilience**: Retry mechanism with exponential backoff
 5. **Command Structure**: New subcommand structure with backward compatibility
+6. **Truncation Issue**: GPT-4o-transcribe may truncate at ~10-11 minutes - handled automatically
 
 ## Development Best Practices
 
@@ -142,6 +156,7 @@ Before committing any changes, ensure:
 - ✅ All backlog tasks migrated to GitHub issues
 - ✅ Audio extraction feature implemented
 - ✅ Command-based CLI structure with subcommands
+- ✅ Transcription truncation fix implemented with model fallback
 - 🚧 Active development on issues #2-#14 (end-to-end testing)
 
 ### Issue Tracking
@@ -149,7 +164,7 @@ All development tasks are now tracked as GitHub issues:
 - Issues #2-#8: Core testing scenarios from original backlog
 - Issues #9-#13: Additional edge cases and quality testing
 - Issue #14: End-to-end testing framework
-- Issue #17: Network resilience improvements (referenced above)
+- Issue #17: Network resilience improvements
 
 ### Branch Strategy
 - `main`: Production-ready code
@@ -174,3 +189,8 @@ All development tasks are now tracked as GitHub issues:
 - Follow existing code patterns and conventions
 - No console.log statements in production code
 - Clear error messages with actionable solutions
+
+## Documentation References
+
+- **API Documentation**: See `docs/API.md` for detailed module documentation
+- **Transcription Truncation**: See `docs/TRANSCRIPTION_TRUNCATION.md` for issue details and solutions

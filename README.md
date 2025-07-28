@@ -5,7 +5,7 @@
 [![GitHub issues](https://img.shields.io/github/issues/qodeca/opentts)](https://github.com/qodeca/opentts/issues)
 [![GitHub stars](https://img.shields.io/github/stars/qodeca/opentts)](https://github.com/qodeca/opentts/stargazers)
 
-A powerful command-line tool that converts audio and video files into accurate text transcriptions using OpenAI's state-of-the-art GPT-4o-transcribe model. Also includes audio extraction capabilities to extract and convert audio from video files. Handles files of any size with intelligent chunking and supports multiple formats.
+A powerful command-line tool that converts audio and video files into accurate text transcriptions using OpenAI's state-of-the-art models (GPT-4o-transcribe and whisper-1). Features automatic truncation recovery, audio extraction capabilities, and intelligent chunking. Handles files of any size and supports multiple formats.
 
 ## Quick Start
 
@@ -50,9 +50,11 @@ opentts extract -i video.mp4 -o audio.mp3
 ### Transcription
 - 🎵 **Multi-Format Support**: Transcribe MP3, WAV, M4A, MPGA, MPEG audio files
 - 🎬 **Video Processing**: Extract and transcribe audio from MP4, MOV, AVI, MKV, WebM, FLV, WMV
-- 🔪 **Smart Chunking**: Automatically splits large files into 25-minute segments
+- 🔪 **Smart Chunking**: Automatically splits large files into 15-minute segments with overlap
 - 🚀 **Efficient Processing**: Handles files of any size without memory issues
 - 📊 **Progress Tracking**: Real-time feedback with spinner animations
+- 🔄 **Truncation Recovery**: Automatic fallback to whisper-1 when GPT-4o-transcribe truncates
+- 🛡️ **Complete Transcriptions**: Special handling for final chunks to ensure no content is lost
 
 ### Audio Extraction
 - 🎥 **Extract from Video**: Extract audio tracks from all supported video formats
@@ -144,6 +146,7 @@ opentts transcribe [options]
 |--------|-------|-------------|----------|
 | `--input` | `-i` | Path to input audio/video file | ✅ |
 | `--output` | `-o` | Path for output transcription | ✅ |
+| `--save-chunks` | | Save audio chunks for debugging | ❌ |
 | `--help` | `-h` | Display help information | ❌ |
 
 #### Extract Command
@@ -245,9 +248,9 @@ $env:OPENAI_API_KEY="your_api_key_here"
 
 2. **Audio Extraction**: For video files, FFmpeg extracts the audio track into a temporary MP3 file.
 
-3. **File Chunking**: The audio is divided into chunks of approximately 25 minutes each (the maximum duration supported by OpenAI's model).
+3. **File Chunking**: The audio is divided into chunks of 15 minutes each with 15-second overlap to prevent content loss at boundaries.
 
-4. **Transcription**: Each chunk is sent to OpenAI's GPT-4o-transcribe model for transcription.
+4. **Transcription**: Each chunk is sent to OpenAI's GPT-4o-transcribe model with automatic fallback to whisper-1 if truncation is detected. Final chunks always use whisper-1 for completeness.
 
 5. **Consolidation**: The transcriptions from all chunks are combined into a single text file.
 
@@ -488,6 +491,23 @@ ffmpeg -version
   ```
 </details>
 
+<details>
+<summary><strong>Transcription seems incomplete or cut off</strong></summary>
+
+OpenTTS automatically handles transcription truncation issues:
+- Final chunks use whisper-1 model to ensure completeness
+- Automatic fallback when truncation is detected
+- Use `--save-chunks` to debug chunk processing:
+  ```bash
+  opentts transcribe -i audio.mp3 -o transcript.txt --save-chunks
+  ```
+- For critical transcriptions, force whisper-1:
+  ```bash
+  TRANSCRIBE_MODEL=whisper-1 opentts transcribe -i audio.mp3 -o transcript.txt
+  ```
+- See `docs/TRANSCRIPTION_TRUNCATION.md` for detailed information
+</details>
+
 ### Getting Help
 
 - 📖 Check the [documentation](https://github.com/qodeca/opentts/wiki)
@@ -534,7 +554,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 
-- 🤖 Built with [OpenAI's GPT-4o-transcribe model](https://platform.openai.com/docs/models)
+- 🤖 Built with [OpenAI's transcription models](https://platform.openai.com/docs/models) (GPT-4o-transcribe and whisper-1)
 - 🎬 Audio processing powered by [FFmpeg](https://ffmpeg.org/)
 - 🚀 CLI interface built with [Commander.js](https://github.com/tj/commander.js/)
 - 💫 Loading animations by [ora](https://github.com/sindresorhus/ora)

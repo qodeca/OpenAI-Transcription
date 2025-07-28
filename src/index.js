@@ -16,6 +16,7 @@ program
     .description('Convert audio or video files to text transcription using OpenAI GPT-4o-transcribe model')
     .requiredOption('-i, --input <path>', 'Path to the input audio or video file')
     .requiredOption('-o, --output <path>', 'Path where the transcription will be saved')
+    .option('--save-chunks', 'Save audio chunks for debugging (do not delete temporary files)')
     .action(require('./commands/transcribe'));
 
 // Add extract command

@@ -39,8 +39,10 @@ async function transcribeCommand(options) {
             throw new Error(`${mediaType} file exists but is empty (0 bytes)`);
         }
         
-        // Call the transcribe function with the resolved paths
-        const transcription = await transcribeAudio(resolvedInputPath, resolvedOutputPath);
+        // Call the transcribe function with the resolved paths and options
+        const transcription = await transcribeAudio(resolvedInputPath, resolvedOutputPath, {
+            saveChunks: options.saveChunks || false
+        });
         
         console.log('\nTranscription completed successfully!');
         console.log(`Full transcription has been saved to: ${resolvedOutputPath}`);
