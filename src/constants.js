@@ -8,9 +8,9 @@
 
 // Transcription chunk settings
 const TRANSCRIPTION = {
-    // Maximum chunk duration in seconds (15 minutes)
-    // Reduced from 23 minutes to prevent OpenAI model truncation at chunk boundaries
-    CHUNK_DURATION_SECONDS: 900,
+    // Maximum chunk duration in seconds (9 minutes)
+    // Reduced from 15 minutes to stay safely below GPT-4o-transcribe's 10-11 minute truncation threshold
+    CHUNK_DURATION_SECONDS: 540,
     
     // Overlap between chunks in seconds to prevent content loss at boundaries
     // This helps ensure no speech is lost when chunks are split
