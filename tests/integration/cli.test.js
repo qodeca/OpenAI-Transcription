@@ -29,10 +29,17 @@ describe('CLI Integration Tests', () => {
     test('should show help when no arguments provided', async () => {
       try {
         await execAsync(`node ${cliPath}`);
+        // If it doesn't throw, check stdout
+        fail('Expected command to exit with code 1');
       } catch (error) {
+        // Commander.js exits with code 1 when no command is provided
         expect(error.code).toBe(1);
-        expect(error.stderr).toContain('error: required option');
-        expect(error.stderr).toContain('-i, --input');
+        // Commander outputs help to stderr when exiting with error
+        const output = error.stdout + error.stderr;
+        expect(output).toContain('Usage: opentts');
+        expect(output).toContain('Commands:');
+        expect(output).toContain('transcribe');
+        expect(output).toContain('extract');
       }
     });
 
@@ -40,10 +47,19 @@ describe('CLI Integration Tests', () => {
       const { stdout } = await execAsync(`node ${cliPath} -h`);
       
       expect(stdout).toContain('Usage:');
-      expect(stdout).toContain('-i, --input');
-      expect(stdout).toContain('-o, --output');
+      expect(stdout).toContain('Commands:');
+      expect(stdout).toContain('transcribe');
+      expect(stdout).toContain('extract');
       expect(stdout).toContain('--version');
       expect(stdout).toContain('-h, --help');
+    });
+    
+    test('should show transcribe help with transcribe -h', async () => {
+      const { stdout } = await execAsync(`node ${cliPath} transcribe -h`);
+      
+      expect(stdout).toContain('Usage: opentts transcribe');
+      expect(stdout).toContain('-i, --input');
+      expect(stdout).toContain('-o, --output');
     });
 
     test('should show version with --version flag', async () => {
@@ -57,7 +73,7 @@ describe('CLI Integration Tests', () => {
       const outputPath = path.join(tempDir, 'output.txt');
       
       try {
-        await execAsync(`node ${cliPath} -i /nonexistent/file.mp3 -o ${outputPath}`);
+        await execAsync(`node ${cliPath} transcribe -i /nonexistent/file.mp3 -o ${outputPath}`);
       } catch (error) {
         expect(error.code).toBe(1);
         expect(error.stderr).toContain('Error during transcription process');
@@ -73,7 +89,7 @@ describe('CLI Integration Tests', () => {
       await fs.writeFile(inputPath, 'dummy pdf content');
       
       try {
-        await execAsync(`node ${cliPath} -i ${inputPath} -o ${outputPath}`);
+        await execAsync(`node ${cliPath} transcribe -i ${inputPath} -o ${outputPath}`);
       } catch (error) {
         expect(error.code).toBe(1);
         expect(error.stderr).toContain('Error during transcription process');
@@ -82,12 +98,12 @@ describe('CLI Integration Tests', () => {
       }
     });
 
-    test('should error when only input is provided', async () => {
+    test('should error when only input is provided for transcribe', async () => {
       const inputPath = path.join(tempDir, 'test.mp3');
       await fs.writeFile(inputPath, 'dummy audio content');
       
       try {
-        await execAsync(`node ${cliPath} -i ${inputPath}`);
+        await execAsync(`node ${cliPath} transcribe -i ${inputPath}`);
       } catch (error) {
         expect(error.code).toBe(1);
         expect(error.stderr).toContain('error: required option');
@@ -95,15 +111,29 @@ describe('CLI Integration Tests', () => {
       }
     });
 
-    test('should error when only output is provided', async () => {
+    test('should error when only output is provided for transcribe', async () => {
       const outputPath = path.join(tempDir, 'output.txt');
       
       try {
-        await execAsync(`node ${cliPath} -o ${outputPath}`);
+        await execAsync(`node ${cliPath} transcribe -o ${outputPath}`);
       } catch (error) {
         expect(error.code).toBe(1);
         expect(error.stderr).toContain('error: required option');
         expect(error.stderr).toContain('-i, --input');
+      }
+    });
+    
+    test('should show deprecation warning for legacy command format', async () => {
+      const inputPath = path.join(tempDir, 'test.mp3');
+      const outputPath = path.join(tempDir, 'output.txt');
+      await fs.writeFile(inputPath, 'dummy audio content');
+      
+      try {
+        await execAsync(`node ${cliPath} -i ${inputPath} -o ${outputPath}`);
+      } catch (error) {
+        // The command will fail due to invalid file, but we should see the deprecation warning
+        expect(error.stdout).toContain('Warning: You are using the legacy command format');
+        expect(error.stdout).toContain('deprecated');
       }
     });
   });

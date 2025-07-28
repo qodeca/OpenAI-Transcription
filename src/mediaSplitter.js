@@ -34,19 +34,53 @@ function getMediaType(filePath) {
 /**
  * Extract audio from video file
  * @param {string} videoPath - Path to the video file
+ * @param {string} [outputPath] - Optional custom output path
+ * @param {Object} [options] - Optional extraction options
+ * @param {string} [options.format] - Output format (mp3, wav, m4a, aac)
+ * @param {string} [options.bitrate] - Audio bitrate (e.g., 128k, 320k)
+ * @param {string} [options.quality] - Quality level (0-9, 0=best)
  * @returns {Promise<string>} - Path to the extracted audio file
  */
-async function extractAudioFromVideo(videoPath) {
-    const tempDir = path.join(os.tmpdir(), 'extracted-audio-' + Date.now());
-    await fs.ensureDir(tempDir);
+async function extractAudioFromVideo(videoPath, outputPath = null, options = {}) {
+    let audioPath;
     
-    const audioPath = path.join(tempDir, 'extracted-audio.mp3');
+    if (outputPath) {
+        // Use custom output path
+        audioPath = outputPath;
+        const outputDir = path.dirname(audioPath);
+        await fs.ensureDir(outputDir);
+    } else {
+        // Use temp directory (backward compatibility)
+        const tempDir = path.join(os.tmpdir(), 'extracted-audio-' + Date.now());
+        await fs.ensureDir(tempDir);
+        audioPath = path.join(tempDir, 'extracted-audio.mp3');
+    }
+    
+    const format = options.format || 'mp3';
+    const audioCodecMap = {
+        'mp3': 'libmp3lame',
+        'wav': 'pcm_s16le',
+        'm4a': 'aac',
+        'aac': 'aac'
+    };
     
     return new Promise((resolve, reject) => {
-        ffmpeg(videoPath)
+        const command = ffmpeg(videoPath)
             .output(audioPath)
             .noVideo()
-            .audioCodec('libmp3lame')
+            .audioCodec(audioCodecMap[format] || 'libmp3lame');
+        
+        // Apply bitrate if specified
+        if (options.bitrate) {
+            command.audioBitrate(options.bitrate);
+        }
+        
+        // Apply quality if specified (for codecs that support it)
+        if (options.quality && format === 'mp3') {
+            command.audioQuality(parseInt(options.quality));
+        }
+        
+        command
             .on('end', () => {
                 console.log(`Extracted audio from video file: ${path.basename(videoPath)}`);
                 resolve(audioPath);
@@ -150,6 +184,56 @@ function getMediaDuration(filePath) {
 }
 
 /**
+ * Convert audio file to different format or apply quality settings
+ * @param {string} inputPath - Path to the input audio file
+ * @param {string} outputPath - Path where the converted audio will be saved
+ * @param {Object} [options] - Optional conversion options
+ * @param {string} [options.format] - Output format (mp3, wav, m4a, aac)
+ * @param {string} [options.bitrate] - Audio bitrate (e.g., 128k, 320k)
+ * @param {string} [options.quality] - Quality level (0-9, 0=best)
+ * @returns {Promise<void>}
+ */
+async function convertAudioFormat(inputPath, outputPath, options = {}) {
+    const outputDir = path.dirname(outputPath);
+    await fs.ensureDir(outputDir);
+    
+    const format = options.format || 'mp3';
+    const audioCodecMap = {
+        'mp3': 'libmp3lame',
+        'wav': 'pcm_s16le',
+        'm4a': 'aac',
+        'aac': 'aac'
+    };
+    
+    return new Promise((resolve, reject) => {
+        const command = ffmpeg(inputPath)
+            .output(outputPath)
+            .audioCodec(audioCodecMap[format] || 'libmp3lame');
+        
+        // Apply bitrate if specified
+        if (options.bitrate) {
+            command.audioBitrate(options.bitrate);
+        }
+        
+        // Apply quality if specified (for codecs that support it)
+        if (options.quality && format === 'mp3') {
+            command.audioQuality(parseInt(options.quality));
+        }
+        
+        command
+            .on('end', () => {
+                console.log(`Converted audio to ${format.toUpperCase()} format`);
+                resolve();
+            })
+            .on('error', (err) => {
+                console.error('Error converting audio:', err);
+                reject(err);
+            })
+            .run();
+    });
+}
+
+/**
  * Cleanup temporary files and directories
  * @param {string[]} filePaths - Array of file paths to clean up
  */
@@ -182,6 +266,7 @@ module.exports = {
     splitMediaFile,
     getMediaType,
     extractAudioFromVideo,
+    convertAudioFormat,
     cleanupFiles,
     getMediaDuration
 };

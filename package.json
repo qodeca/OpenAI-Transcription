@@ -1,8 +1,11 @@
 {
-  "name": "openai-transcription",
-  "version": "1.0.0",
-  "description": "A command-line tool to transcribe audio and video files using the OpenAI GPT-4o-transcribe model.",
+  "name": "opentts",
+  "version": "1.1.0",
+  "description": "OpenTTS - A comprehensive CLI tool for audio/video transcription using OpenAI's GPT-4o model and audio extraction with format conversion support.",
   "main": "src/index.js",
+  "bin": {
+    "opentts": "./src/index.js"
+  },
   "scripts": {
     "start": "node src/index.js",
     "test": "jest",

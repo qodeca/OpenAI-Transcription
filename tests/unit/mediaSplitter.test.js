@@ -12,6 +12,7 @@ const {
   splitMediaFile,
   getMediaType,
   extractAudioFromVideo,
+  convertAudioFormat,
   cleanupFiles
 } = require('../../src/mediaSplitter');
 
@@ -96,11 +97,52 @@ describe('mediaSplitter.js', () => {
       expect(result).toMatch(/extracted-audio.mp3$/);
     });
 
+    test('should extract audio to custom output path', async () => {
+      const videoPath = '/path/to/video.mp4';
+      const outputPath = '/custom/path/output.mp3';
+      
+      const result = await extractAudioFromVideo(videoPath, outputPath);
+
+      expect(fs.ensureDir).toHaveBeenCalledWith('/custom/path');
+      expect(ffmpeg).toHaveBeenCalledWith(videoPath);
+      expect(ffmpeg.prototype.output).toHaveBeenCalledWith(outputPath);
+      expect(result).toBe(outputPath);
+    });
+
+    test('should extract audio with custom format options', async () => {
+      const videoPath = '/path/to/video.mp4';
+      const outputPath = '/path/to/output.wav';
+      const options = {
+        format: 'wav',
+        bitrate: '320k',
+        quality: '0'
+      };
+      
+      await extractAudioFromVideo(videoPath, outputPath, options);
+
+      expect(ffmpeg.prototype.audioCodec).toHaveBeenCalledWith('pcm_s16le');
+      expect(ffmpeg.prototype.audioBitrate).toHaveBeenCalledWith('320k');
+      expect(ffmpeg.prototype.audioQuality).not.toHaveBeenCalled(); // Quality not applicable for WAV
+    });
+
+    test('should apply quality for MP3 format', async () => {
+      const videoPath = '/path/to/video.mp4';
+      const outputPath = '/path/to/output.mp3';
+      const options = {
+        format: 'mp3',
+        quality: '2'
+      };
+      
+      await extractAudioFromVideo(videoPath, outputPath, options);
+
+      expect(ffmpeg.prototype.audioQuality).toHaveBeenCalledWith(2);
+    });
+
     test('should handle extraction errors', async () => {
       ffmpeg._setSuccess(false);
       const videoPath = '/path/to/video.mp4';
 
-      await expect(extractAudioFromVideo(videoPath)).rejects.toThrow('FFmpeg error');
+      await expect(extractAudioFromVideo(videoPath)).rejects.toThrow('Simulated ffmpeg error');
     });
   });
 
@@ -160,6 +202,94 @@ describe('mediaSplitter.js', () => {
       expect(ffmpeg.setDuration).toHaveBeenCalledWith(1400);
       expect(ffmpeg.setDuration).toHaveBeenCalledWith(1400);
       expect(ffmpeg.setDuration).toHaveBeenCalledWith(200); // Last chunk is only 200s
+    });
+  });
+
+  describe('convertAudioFormat', () => {
+    beforeEach(() => {
+      fs.ensureDir.mockResolvedValue();
+    });
+
+    test('should convert audio to MP3 format', async () => {
+      const inputPath = '/path/to/input.wav';
+      const outputPath = '/path/to/output.mp3';
+      
+      await convertAudioFormat(inputPath, outputPath);
+      
+      expect(fs.ensureDir).toHaveBeenCalledWith('/path/to');
+      expect(ffmpeg).toHaveBeenCalledWith(inputPath);
+      expect(ffmpeg.prototype.output).toHaveBeenCalledWith(outputPath);
+      expect(ffmpeg.prototype.audioCodec).toHaveBeenCalledWith('libmp3lame');
+      expect(ffmpeg.prototype.run).toHaveBeenCalled();
+    });
+
+    test('should convert audio to WAV format', async () => {
+      const inputPath = '/path/to/input.mp3';
+      const outputPath = '/path/to/output.wav';
+      const options = { format: 'wav' };
+      
+      await convertAudioFormat(inputPath, outputPath, options);
+      
+      expect(ffmpeg.prototype.audioCodec).toHaveBeenCalledWith('pcm_s16le');
+    });
+
+    test('should convert audio to M4A format', async () => {
+      const inputPath = '/path/to/input.mp3';
+      const outputPath = '/path/to/output.m4a';
+      const options = { format: 'm4a' };
+      
+      await convertAudioFormat(inputPath, outputPath, options);
+      
+      expect(ffmpeg.prototype.audioCodec).toHaveBeenCalledWith('aac');
+    });
+
+    test('should apply bitrate when specified', async () => {
+      const inputPath = '/path/to/input.wav';
+      const outputPath = '/path/to/output.mp3';
+      const options = { bitrate: '320k' };
+      
+      await convertAudioFormat(inputPath, outputPath, options);
+      
+      expect(ffmpeg.prototype.audioBitrate).toHaveBeenCalledWith('320k');
+    });
+
+    test('should apply quality when specified for MP3', async () => {
+      const inputPath = '/path/to/input.wav';
+      const outputPath = '/path/to/output.mp3';
+      const options = { quality: '0' };
+      
+      await convertAudioFormat(inputPath, outputPath, options);
+      
+      expect(ffmpeg.prototype.audioQuality).toHaveBeenCalledWith(0);
+    });
+
+    test('should not apply quality for non-MP3 formats', async () => {
+      const inputPath = '/path/to/input.mp3';
+      const outputPath = '/path/to/output.wav';
+      const options = { format: 'wav', quality: '0' };
+      
+      await convertAudioFormat(inputPath, outputPath, options);
+      
+      expect(ffmpeg.prototype.audioQuality).not.toHaveBeenCalled();
+    });
+
+    test('should handle conversion errors', async () => {
+      ffmpeg._setSuccess(false);
+      
+      const inputPath = '/path/to/input.wav';
+      const outputPath = '/path/to/output.mp3';
+      
+      await expect(convertAudioFormat(inputPath, outputPath))
+        .rejects.toThrow('Simulated ffmpeg error');
+    });
+
+    test('should use default MP3 format when not specified', async () => {
+      const inputPath = '/path/to/input.wav';
+      const outputPath = '/path/to/output.mp3';
+      
+      await convertAudioFormat(inputPath, outputPath);
+      
+      expect(ffmpeg.prototype.audioCodec).toHaveBeenCalledWith('libmp3lame');
     });
   });
 

@@ -12,6 +12,7 @@ const fsMock = {
   remove: jest.fn(() => Promise.resolve()),
   writeFile: jest.fn(() => Promise.resolve()),
   createReadStream: jest.fn(() => 'mock-file-stream'),
+  copy: jest.fn(() => Promise.resolve()),
 };
 
 module.exports = fsMock;

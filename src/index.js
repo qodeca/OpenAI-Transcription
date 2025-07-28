@@ -1,66 +1,50 @@
+#!/usr/bin/env node
+
 require('dotenv').config();
-const fs = require('fs-extra');
-const path = require('path');
 const { program } = require('commander');
-const { transcribeAudio } = require('./transcribe');
-const { getMediaType } = require('./mediaSplitter');
 const { version } = require('../package.json');
 
-// Configure command line options
+// Configure main program
 program
+    .name('opentts')
     .version(version)
+    .description('OpenTTS - Open Text-to-Speech & Transcription Suite');
+
+// Add transcribe command
+program
+    .command('transcribe')
     .description('Convert audio or video files to text transcription using OpenAI GPT-4o-transcribe model')
-    .requiredOption('-i, --input <path>', 'Path to the input audio or video file (required)')
-    .requiredOption('-o, --output <path>', 'Path where the transcription will be saved (required)')
-    .parse(process.argv);
+    .requiredOption('-i, --input <path>', 'Path to the input audio or video file')
+    .requiredOption('-o, --output <path>', 'Path where the transcription will be saved')
+    .action(require('./commands/transcribe'));
 
-const options = program.opts();
+// Add extract command
+program
+    .command('extract')
+    .description('Extract audio from video files or convert between audio formats')
+    .requiredOption('-i, --input <path>', 'Path to the input video or audio file')
+    .requiredOption('-o, --output <path>', 'Path where the audio file will be saved')
+    .option('-f, --format <format>', 'Output audio format (mp3|wav|m4a|aac)', 'mp3')
+    .option('-b, --bitrate <rate>', 'Audio bitrate (e.g., 128k, 320k)', '192k')
+    .option('-q, --quality <level>', 'Quality level (0-9, 0=best)', '2')
+    .action(require('./commands/extract'));
 
-async function main() {
-    try {
-        // Use paths from command line arguments
-        const inputFilePath = options.input;
-        const outputFilePath = options.output;
+// Handle legacy usage (backward compatibility)
+if (process.argv.length > 2 && !['transcribe', 'extract'].includes(process.argv[2])) {
+    // Check if old-style arguments are provided
+    const hasOldStyleArgs = process.argv.some(arg => arg === '-i' || arg === '--input');
+    
+    if (hasOldStyleArgs) {
+        console.log('\n⚠️  Warning: You are using the legacy command format.');
+        console.log('This format is deprecated and will be removed in a future version.');
+        console.log('\nPlease use the new command format:');
+        console.log('  node src/index.js transcribe -i <input> -o <output>');
+        console.log('\nAutomatically running transcribe command for backward compatibility...\n');
         
-        // Resolve relative paths if provided
-        const resolvedInputPath = path.isAbsolute(inputFilePath) 
-            ? inputFilePath 
-            : path.resolve(process.cwd(), inputFilePath);
-            
-        const resolvedOutputPath = path.isAbsolute(outputFilePath) 
-            ? outputFilePath 
-            : path.resolve(process.cwd(), outputFilePath);
-        
-        console.log(`Looking for media file at: ${resolvedInputPath}`);
-        
-        if (!await fs.exists(resolvedInputPath)) {
-            throw new Error(`File not found at: ${resolvedInputPath}`);
-        }
-        
-        // Check if the file format is supported
-        const { isSupported, mediaType, extension } = getMediaType(resolvedInputPath);
-        
-        if (!isSupported) {
-            throw new Error(`Unsupported file format: ${extension}. Please provide an audio or video file in a supported format.`);
-        }
-        
-        const stats = await fs.stat(resolvedInputPath);
-        console.log(`Found ${mediaType} file: ${path.basename(resolvedInputPath)} (${(stats.size / (1024 * 1024)).toFixed(2)} MB)`);
-        
-        // Check if the file is empty
-        if (stats.size === 0) {
-            throw new Error(`${mediaType} file exists but is empty (0 bytes)`);
-        }
-        
-        // Call the transcribe function with the resolved paths
-        const transcription = await transcribeAudio(resolvedInputPath, resolvedOutputPath);
-        
-        console.log('\nTranscription completed successfully!');
-        console.log(`Full transcription has been saved to: ${resolvedOutputPath}`);
-    } catch (error) {
-        console.error('Error during transcription process:', error.message);
-        process.exit(1);
+        // Insert 'transcribe' command for backward compatibility
+        process.argv.splice(2, 0, 'transcribe');
     }
 }
 
-main();
+// Parse arguments
+program.parse(process.argv);

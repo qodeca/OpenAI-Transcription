@@ -16,6 +16,8 @@ ffmpegMock.ffprobe = jest.fn((filePath, callback) => {
 ffmpegMock.output = jest.fn(() => ffmpegMock);
 ffmpegMock.noVideo = jest.fn(() => ffmpegMock);
 ffmpegMock.audioCodec = jest.fn(() => ffmpegMock);
+ffmpegMock.audioBitrate = jest.fn(() => ffmpegMock);
+ffmpegMock.audioQuality = jest.fn(() => ffmpegMock);
 ffmpegMock.setStartTime = jest.fn(() => ffmpegMock);
 ffmpegMock.setDuration = jest.fn(() => ffmpegMock);
 ffmpegMock.on = jest.fn((event, handler) => {
@@ -24,11 +26,24 @@ ffmpegMock.on = jest.fn((event, handler) => {
     process.nextTick(() => handler());
   } else if (event === 'error' && ffmpegMock._shouldSucceed === false) {
     // Simulate async error
-    process.nextTick(() => handler(new Error('FFmpeg error')));
+    process.nextTick(() => handler(new Error('Simulated ffmpeg error')));
   }
   return ffmpegMock;
 });
 ffmpegMock.run = jest.fn(() => ffmpegMock);
+
+// Add prototype methods for tests that check them
+ffmpegMock.prototype = {
+  output: ffmpegMock.output,
+  noVideo: ffmpegMock.noVideo,
+  audioCodec: ffmpegMock.audioCodec,
+  audioBitrate: ffmpegMock.audioBitrate,
+  audioQuality: ffmpegMock.audioQuality,
+  setStartTime: ffmpegMock.setStartTime,
+  setDuration: ffmpegMock.setDuration,
+  on: ffmpegMock.on,
+  run: ffmpegMock.run
+};
 
 // Helper to control mock behavior
 ffmpegMock._setSuccess = (shouldSucceed) => {

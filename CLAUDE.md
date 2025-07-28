@@ -1,16 +1,27 @@
-# CLAUDE.md
+# CLAUDE.md - OpenTTS Project Guidelines
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with the OpenTTS (Open Text-to-Speech & Transcription Suite) codebase.
 
 ## Common Development Commands
 
 ### Running the Application
-- Run: `node src/index.js -i <input-file> -o <output-file>`
-- Or via npm: `npm start -- -i <input-file> -o <output-file>`
+
+#### Transcription
+- Run: `node src/index.js transcribe -i <input-file> -o <output-file>`
+- Or via npm: `npm start -- transcribe -i <input-file> -o <output-file>`
+
+#### Audio Extraction
+- Run: `node src/index.js extract -i <input-file> -o <output-file>`
+- With options: `node src/index.js extract -i video.mp4 -o audio.mp3 --bitrate 320k`
+
+#### Legacy Format (Deprecated)
+- Old format: `node src/index.js -i <input-file> -o <output-file>`
+- This shows a deprecation warning and runs transcribe command
 
 ### Environment Setup
 - Create a `.env` file with: `OPENAI_API_KEY=your_api_key_here`
 - Install dependencies: `npm install`
+- For global CLI access: `npm link` (use `npm unlink -g opentts` to remove)
 
 ### Testing
 
@@ -34,27 +45,47 @@ The project uses Jest for automated testing with comprehensive coverage:
 - Test files located in `tests/` directory
 - All testing tasks now tracked as GitHub issues (#2-#14)
 
+## Project Overview
+
+**OpenTTS** is a comprehensive command-line tool that provides:
+- **Transcription**: Convert audio/video files to text using OpenAI's GPT-4o-transcribe model
+- **Audio Extraction**: Extract and convert audio from video files with quality control
+- **Format Support**: Handles multiple audio/video formats with intelligent chunking
+
 ## Architecture Overview
 
 ### Core Components
 
 1. **Entry Point** (`src/index.js`)
-   - CLI setup using Commander.js
-   - Input validation for file paths and formats
-   - Orchestrates the transcription process
+   - CLI setup using Commander.js with subcommands
+   - Supports `transcribe` and `extract` commands
+   - Backward compatibility with legacy format
+   - Routes to appropriate command handlers
 
-2. **Media Processing** (`src/mediaSplitter.js`)
+2. **Command Modules** (`src/commands/`)
+   - `transcribe.js`: Handles transcription command logic
+   - `extract.js`: Handles audio extraction command logic
+   - Both modules validate inputs and call appropriate services
+
+3. **Media Processing** (`src/mediaSplitter.js`)
    - Extracts audio from video files using FFmpeg
    - Splits audio into ~25-minute chunks (OpenAI's limit)
+   - Converts between audio formats
    - Handles temporary file creation and cleanup
 
-3. **Transcription** (`src/transcribe.js`)
+4. **Audio Extraction** (`src/audioExtractor.js`)
+   - Core logic for audio extraction feature
+   - Supports video-to-audio extraction
+   - Audio format conversion with quality settings
+   - Progress feedback with ora spinner
+
+5. **Transcription** (`src/transcribe.js`)
    - Interfaces with OpenAI's GPT-4o-transcribe model
    - Processes audio chunks sequentially
    - Combines chunk transcriptions into final output
    - Special handling for test environment (NODE_ENV=test)
 
-4. **Configuration** (`src/config.js`)
+6. **Configuration** (`src/config.js`)
    - Manages environment variables
    - Provides API configuration
 
@@ -62,17 +93,22 @@ The project uses Jest for automated testing with comprehensive coverage:
 
 - **Chunk Duration**: ~23 minutes (1400 seconds) per chunk (safely under OpenAI's 25-minute limit)
 - **Supported Formats**: 
-  - Audio: MP3, WAV, M4A, MPGA, MPEG
-  - Video: MP4, MOV, AVI, MKV, WebM, FLV, WMV
+  - Audio Input/Output: MP3, WAV, M4A, MPGA, MPEG
+  - Video Input: MP4, MOV, AVI, MKV, WebM, FLV, WMV
+  - Audio Extraction Output: MP3, WAV, M4A, AAC
+- **Audio Quality Options**:
+  - Bitrate: Configurable (e.g., 128k, 192k, 320k)
+  - Quality: 0-9 scale (0=best quality)
 - **Temporary Files**: Created in system temp directory, cleaned up after processing
 - **Error Handling**: Comprehensive error messages with suggestions for resolution
 
 ### Important Considerations
 
-1. **API Key**: Required environment variable `OPENAI_API_KEY`
+1. **API Key**: Required environment variable `OPENAI_API_KEY` (only for transcription)
 2. **File Size Handling**: Large files are automatically chunked
 3. **Memory Management**: Processes files in chunks to avoid memory issues
 4. **Network Resilience**: Basic error handling for API failures (see GitHub issue #17 for planned improvements)
+5. **Command Structure**: New subcommand structure with backward compatibility
 
 ## Development Best Practices
 
@@ -104,6 +140,8 @@ Before committing any changes, ensure:
 ### Current Project Status
 - ✅ Comprehensive test suite implemented (~97% coverage)
 - ✅ All backlog tasks migrated to GitHub issues
+- ✅ Audio extraction feature implemented
+- ✅ Command-based CLI structure with subcommands
 - 🚧 Active development on issues #2-#14 (end-to-end testing)
 
 ### Issue Tracking
@@ -125,6 +163,11 @@ All development tasks are now tracked as GitHub issues:
 - Integration tests verify CLI behavior
 - End-to-end tests (planned) will use real media files and services
 - All tests must pass before commits
+
+### Project Name
+- Internal name: `opentts`
+- Display name: `OpenTTS` (Open Text-to-Speech & Transcription Suite)
+- CLI command: `opentts`
 
 ### Code Quality Standards
 - Maintain >95% test coverage
