@@ -1,0 +1,55 @@
+const fs = require('fs-extra');
+const path = require('path');
+const { transcribeAudio } = require('../transcribe');
+const { getMediaType } = require('../mediaSplitter');
+
+async function transcribeCommand(options) {
+    try {
+        // Use paths from command line arguments
+        const inputFilePath = options.input;
+        const outputFilePath = options.output;
+        
+        // Resolve relative paths if provided
+        const resolvedInputPath = path.isAbsolute(inputFilePath) 
+            ? inputFilePath 
+            : path.resolve(process.cwd(), inputFilePath);
+            
+        const resolvedOutputPath = path.isAbsolute(outputFilePath) 
+            ? outputFilePath 
+            : path.resolve(process.cwd(), outputFilePath);
+        
+        console.log(`Looking for media file at: ${resolvedInputPath}`);
+        
+        if (!await fs.exists(resolvedInputPath)) {
+            throw new Error(`File not found at: ${resolvedInputPath}`);
+        }
+        
+        // Check if the file format is supported
+        const { isSupported, mediaType, extension } = getMediaType(resolvedInputPath);
+        
+        if (!isSupported) {
+            throw new Error(`Unsupported file format: ${extension}. Please provide an audio or video file in a supported format.`);
+        }
+        
+        const stats = await fs.stat(resolvedInputPath);
+        console.log(`Found ${mediaType} file: ${path.basename(resolvedInputPath)} (${(stats.size / (1024 * 1024)).toFixed(2)} MB)`);
+        
+        // Check if the file is empty
+        if (stats.size === 0) {
+            throw new Error(`${mediaType} file exists but is empty (0 bytes)`);
+        }
+        
+        // Call the transcribe function with the resolved paths and options
+        const transcription = await transcribeAudio(resolvedInputPath, resolvedOutputPath, {
+            saveChunks: options.saveChunks || false
+        });
+        
+        console.log('\nTranscription completed successfully!');
+        console.log(`Full transcription has been saved to: ${resolvedOutputPath}`);
+    } catch (error) {
+        console.error('Error during transcription process:', error.message);
+        process.exit(1);
+    }
+}
+
+module.exports = transcribeCommand;

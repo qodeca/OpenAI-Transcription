@@ -30,6 +30,9 @@ nieistniejacy_folder/
 # Audio chunks and temporary media files
 audio-chunks-*
 
+# Test coverage
+coverage/
+
 # IDE specific files
 .idea/
 .vscode/

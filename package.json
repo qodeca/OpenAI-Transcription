@@ -1,10 +1,18 @@
 {
-  "name": "openai-transcription",
-  "version": "1.0.0",
-  "description": "A command-line tool to transcribe audio and video files using the OpenAI GPT-4o-transcribe model.",
+  "name": "opentts",
+  "version": "1.1.0",
+  "description": "OpenTTS - A comprehensive CLI tool for audio/video transcription using OpenAI's GPT-4o model and audio extraction with format conversion support.",
   "main": "src/index.js",
+  "bin": {
+    "opentts": "./src/index.js"
+  },
   "scripts": {
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "test": "jest",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "commander": "^13.1.0",
@@ -17,5 +25,9 @@
     "ora": "^8.2.0"
   },
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "jest": "^30.0.0"
+  }
 }
